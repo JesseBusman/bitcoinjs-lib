@@ -162,6 +162,7 @@ class Transaction {
     const hasWitnesses = _ALLOW_WITNESS && this.hasWitnesses();
     return (
       (hasWitnesses ? 10 : 8) +
+      (this.network.timeInTransaction ? 4 : 0) +
       varuint.encodingLength(this.ins.length) +
       varuint.encodingLength(this.outs.length) +
       this.ins.reduce((sum, input) => {
