@@ -366,6 +366,7 @@ class Transaction {
       initialOffset || 0,
     );
     bufferWriter.writeInt32(this.version);
+    if (this.network.timeInTransaction) bufferWriter.writeUInt32(this.time);
     const hasWitnesses = _ALLOW_WITNESS && this.hasWitnesses();
     if (hasWitnesses) {
       bufferWriter.writeUInt8(Transaction.ADVANCED_TRANSACTION_MARKER);
