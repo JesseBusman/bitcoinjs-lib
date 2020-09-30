@@ -54,7 +54,7 @@ class TransactionBuilder {
     this.maximumFeeRate = maximumFeeRate;
     this.__PREV_TX_SET = {};
     this.__INPUTS = [];
-    this.__TX = new transaction_1.Transaction();
+    this.__TX = new transaction_1.Transaction(this.network);
     this.__TX.version = 2;
     this.__USE_LOW_R = false;
     console.warn(
@@ -69,6 +69,7 @@ class TransactionBuilder {
     const txb = new TransactionBuilder(network);
     // Copy transaction fields
     txb.setVersion(transaction.version);
+    txb.setTime(transaction.time);
     txb.setLockTime(transaction.locktime);
     // Copy outputs (done first to avoid signature invalidation)
     transaction.outs.forEach(txOut => {
@@ -113,6 +114,11 @@ class TransactionBuilder {
     typeforce(types.UInt32, version);
     // XXX: this might eventually become more complex depending on what the versions represent
     this.__TX.version = version;
+  }
+  setTime(time) {
+    typeforce(types.UInt32, time);
+    // XXX: this might eventually become more complex depending on what the versions represent
+    this.__TX.time = time;
   }
   addInput(txHash, vout, sequence, prevOutScript) {
     if (!this.__canModifyInputs()) {
