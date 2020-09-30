@@ -5,6 +5,7 @@ const bcrypto = require('./crypto');
 const bscript = require('./script');
 const script_1 = require('./script');
 const types = require('./types');
+const networks = require('./networks');
 const typeforce = require('typeforce');
 const varuint = require('varuint-bitcoin');
 function varSliceSize(someScript) {
@@ -39,16 +40,20 @@ function isOutput(out) {
   return out.value !== undefined;
 }
 class Transaction {
-  constructor() {
+  constructor(network) {
+    this.network = network || networks.bitcoin;
     this.version = 1;
+    this.time = Math.floor(new Date().getTime() / 1000);
     this.locktime = 0;
     this.ins = [];
     this.outs = [];
   }
-  static fromBuffer(buffer, _NO_STRICT) {
+  static fromBuffer(buffer, _NO_STRICT, network) {
+    network = network || networks.bitcoin;
     const bufferReader = new bufferutils_1.BufferReader(buffer);
-    const tx = new Transaction();
+    const tx = new Transaction(network);
     tx.version = bufferReader.readInt32();
+    if (network.timeInTransaction) tx.time = bufferReader.readUInt32();
     const marker = bufferReader.readUInt8();
     const flag = bufferReader.readUInt8();
     let hasWitnesses = false;
@@ -91,8 +96,8 @@ class Transaction {
       throw new Error('Transaction has unexpected data');
     return tx;
   }
-  static fromHex(hex) {
-    return Transaction.fromBuffer(Buffer.from(hex, 'hex'), false);
+  static fromHex(hex, network) {
+    return Transaction.fromBuffer(Buffer.from(hex, 'hex'), false, network);
   }
   static isCoinbaseHash(buffer) {
     typeforce(types.Hash256bit, buffer);
@@ -173,8 +178,9 @@ class Transaction {
     );
   }
   clone() {
-    const newTx = new Transaction();
+    const newTx = new Transaction(this.network);
     newTx.version = this.version;
+    newTx.time = this.time;
     newTx.locktime = this.locktime;
     newTx.ins = this.ins.map(txIn => {
       return {
@@ -317,6 +323,7 @@ class Transaction {
     bufferWriter = new bufferutils_1.BufferWriter(tbuffer, 0);
     const input = this.ins[inIndex];
     bufferWriter.writeUInt32(this.version);
+    if (this.network.timeInTransaction) bufferWriter.writeUInt32(this.time);
     bufferWriter.writeSlice(hashPrevouts);
     bufferWriter.writeSlice(hashSequence);
     bufferWriter.writeSlice(input.hash);
